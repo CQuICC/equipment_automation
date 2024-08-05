@@ -14,6 +14,8 @@ The commands are NOT case sensitive.
 Features: 
 read/write current, read/write voltage, turn on/off channel
 ##############################################################################################
+Install NI_visa: Tested on v 21_0_0. 
+Install pyvisa module
 """
 
 import pyvisa                      ##install NI visa
