@@ -5,3 +5,4 @@
 * PSD7303B: Controls the programmable DC power supply. 
 * MPC320: Control the paddle position of the motorised molarisation controller from Thorlabs.
 * ELL20/M: Thorlabs Linear Stage. Travel Distance 60mm. 
+* NRT-8000: An optical spectrum analyser from New Ridge Technologies. 
