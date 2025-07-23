@@ -1,0 +1,74 @@
+##AUTHORS: Anirban Mukhopadhyay, Kaustubh Narayan
+
+import numpy as np
+import time
+import h5py
+from RsInstrument import *
+from tqdm import tqdm
+from datetime import datetime
+import os
+
+
+    meastype_list = [
+        "FREQuency", "PERiod",
+        "UPEakvalue", "LPEakvalue",
+        "AMPLitude", "MEAN", "RMS", "STDDev"
+    ]
+    n_meas = len(meastype_list)
+
+    # Connect to scope
+    instr = RsInstrument('USB::0x0AAD::0x01D6::102243::INSTR')
+    instr.visa_timeout = 10000
+    instr.opc_timeout = 10000
+    print(f"\nConnected to: {instr.query_str('*IDN?')}\n")
+
+    # DSO settings
+    instr.write_str_with_opc(f"CHAN{on_channel}:STAT ON")
+    for ch in range(1, 5):
+        if ch != on_channel:
+            instr.write_str_with_opc(f"CHAN{ch}:STAT OFF")
+    instr.write_str_with_opc(f"CHAN{on_channel}:COUP DC")
+    instr.write_str_with_opc(f"CHAN{on_channel}:BANDwidth B20")
+    instr.write_str_with_opc(f"CHAN{on_channel}:SCAL {volt_divs}")
+    instr.write_str_with_opc(f"CHAN{on_channel}:POS {pos}")
+    instr.write_str_with_opc(f"TIM:SCAL {time_div}")
+    instr.write_str_with_opc(f"TRIG:A:SOUR CH{on_channel}")
+    instr.write_str_with_opc("TRIG:A:TYPE EDGE")
+    instr.write_str_with_opc("TRIG:A:EDGE:SLOP POS")
+    instr.write_str_with_opc(f"CHAN{on_channel}:THReshold:FINDlevel")
+
+    # Set acquisition parameters
+    instr.write_str_with_opc(f"ACQuire:POINts:VALue {acq_points}")
+    instr.write_str_with_opc(f"ACQuire:AVERage:COUNt {avg_count}")
+
+    if avg_count > 1:
+        instr.write_str_with_opc(f"CHANnel{on_channel}:ARIThmetics AVERage")
+    else:
+        instr.write_str_with_opc(f"CHANnel{on_channel}:ARIThmetics OFF")
+
+    # Enable all 8 measurements
+    for meas_place in range(1, n_meas + 1):
+        instr.write_str_with_opc(f"MEASurement{meas_place}:ENABle ON")
+        instr.write_str_with_opc(f"MEASurement{meas_place}:SOURce CH{on_channel}")
+        instr.write_str_with_opc(f"MEASurement{meas_place}:MAIN {meastype_list[meas_place - 1]}")
+
+    # Preallocate space for measurement results
+    measurements = np.zeros((repeat_no, n_meas))
+
+    print("Starting acquisition...")
+    start = time.time()
+
+    for rep in tqdm(range(repeat_no), desc="Measuring"):
+        for i in range(n_meas):
+            meas_place = i + 1
+            result = instr.query_str_with_opc(f"MEASurement{meas_place}:RESult:ACTual?")
+            try:
+                measurements[rep, i] = float(result)
+            except ValueError:
+                measurements[rep, i] = np.nan
+
+    print(f"Done. Time taken: {time.time() - start:.2f} s")
+    instr.close()
+    print("Instrument disconnected.")
+
+     
