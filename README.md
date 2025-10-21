@@ -1,4 +1,4 @@
-.## Equipment
+## Equipments
 * RTM3000:
   - Captures the waveform from Rohde & Schwarz RTM3004 oscilloscope and plots it on a PC. The data points are also written in a text file for post procesing (if necessary).
   - Changes to FFT mode, and collected the magnitude on the spectrum for a set frequency using cursor. 
